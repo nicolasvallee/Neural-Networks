@@ -19,8 +19,8 @@ const int NB_NODES_PER_LAYER[NB_LAYERS] =
 int NB_WEIGHTS = 0; //value set in init function
 int NB_BIASES = 0; // value set in init function
 
-const int training_set_size = 2;
-const int test_set_size = 2;
+const int training_set_size = 3;
+const int test_set_size = 0;
 const double oo = 1e8;
 
 vector<vector<uint8_t>> pictures(training_set_size + test_set_size);
@@ -160,7 +160,7 @@ void apply(double func(double), vector<double> &v)
 template <typename T>
 void print(const T &t, std::string msg = "")
 {
-    std::cout << msg << '\n' << t << '\n';
+    std::cout << msg << "\n\n" << t << "\n\n";
 }
 
 void init()
@@ -170,21 +170,21 @@ void init()
     std::cout << "\n ## INITIALIZING ## \n";
 
 
-    for(int l = 0; l < NB_LAYERS-1  ; l++)
-    {
-        NB_WEIGHTS += NB_NODES_PER_LAYER[l] * NB_NODES_PER_LAYER[l+1];
-        NB_BIASES += NB_NODES_PER_LAYER[l+1];
-    }
-
-    W.resize(NB_LAYERS-1);
-    B.resize(NB_LAYERS);  // B is used from *1* to NB_LAYERS-1 included
-
     for(int layer = 0; layer < NB_LAYERS-1; layer++)
     {
-        int l1 = NB_NODES_PER_LAYER[layer];
-        int l2 = NB_NODES_PER_LAYER[layer+1];
+        NB_WEIGHTS += NB_NODES_PER_LAYER[layer] * NB_NODES_PER_LAYER[layer+1];
+        NB_BIASES += NB_NODES_PER_LAYER[layer+1];
+    }
+
+    W.resize(NB_LAYERS); //W and B are used from *1* to NB_LAYERS-1 included
+    B.resize(NB_LAYERS);  
+
+    for(int layer = 1; layer < NB_LAYERS; layer++)
+    {
+        int l1 = NB_NODES_PER_LAYER[layer-1];
+        int l2 = NB_NODES_PER_LAYER[layer];
         W[layer].resize(l2,l1); // is it not(l1,l2) ?????????
-        B[layer+1].resize(l2);
+        B[layer].resize(l2);
          for(int j = 0; j < l2; j++)
         {
 
@@ -193,7 +193,7 @@ void init()
                 W[layer](j,k) = rand() % 3 - 1;
                 //W[layer](j,k) = 0;
             }
-            B[layer+1][j] = rand() % 3 - 1;
+            B[layer][j] = rand() % 3 - 1;
             //B[layer+1][j] = 0;
         }
     }
@@ -252,30 +252,32 @@ void updateGradient(vector<double>& gradient, const vector<vector<double>>& zVal
    // std::cout << "nabla_a_C" << nabla_a_C << "\n"; 
     int i_nablaC = 0;
     vector<double> fPrime = lastLayerZ;
-    apply(sigmoidPrime, fPrime);
+    apply(sigmoidPrime, fPrime);         // This will quickly saturate to 0 if values are large (amplitude)
     
     vector<double> delta = element_prod(nabla_a_C,  fPrime);
 
-    for(int layer = NB_LAYERS-1; layer >= 1; layer--)
+    for(int layer = NB_LAYERS-2; layer >= 0; layer--)
     {
-        vector<double> activations = zValues[layer-1];  
+        vector<double> activations = zValues[layer];  
         apply(sigmoid, activations);
 
-        for(int j = 0; j < NB_NODES_PER_LAYER[layer]; j++)
+        //weights 
+        for(int j = 0; j < NB_NODES_PER_LAYER[layer+1]; j++)
         {
-            for(int k = 0; k < NB_NODES_PER_LAYER[layer-1]; k++)
+            for(int k = 0; k < NB_NODES_PER_LAYER[layer]; k++)
             {
                 nablaC[i_nablaC] = activations[k] * delta[j];
                 i_nablaC++;
             }
         }
-        for(int j = 0; j < NB_NODES_PER_LAYER[layer]; j++)
+        //biases
+        for(int j = 0; j < NB_NODES_PER_LAYER[layer+1]; j++)
         {
             nablaC[i_nablaC] = delta[j];
             i_nablaC++;
         }
-        vector<double> v1 = prod(trans(W[layer-1]), delta);
-        vector<double> v2 = zValues[layer-1];
+        vector<double> v1 = prod(trans(W[layer+1]), delta);
+        vector<double> v2 = zValues[layer];
         apply(sigmoidPrime, v2);
         delta = element_prod(v1, v2);
 
@@ -290,7 +292,7 @@ vector<vector<double>> computePerceptron(int picture_id)
     zValues[0].resize(NB_NODES_PER_LAYER[0]);
 
     for(int i = 0; i < picture_size; i++)
-        zValues[0][i] = pictures[picture_id][i];
+        zValues[0][i] = (double)pictures[picture_id][i] / 255 - 0.5;
     
     
 
@@ -303,7 +305,8 @@ vector<vector<double>> computePerceptron(int picture_id)
             double z = 0;
             for(int k = 0; k < NB_NODES_PER_LAYER[layer-1]; k++)
             {
-                z += zValues[layer-1][k] * W[layer-1](j,k);
+                double activation = sigmoid(zValues[layer-1][k]);
+                z +=  activation * W[layer](j,k);
             }
                 
 
@@ -340,7 +343,7 @@ void updateParams(vector<double> &dG)
         {
             for(int k = 0; k < NB_NODES_PER_LAYER[layer-1]; k++)
             {
-                W[layer-1](j,k) += dG[i];
+                W[layer](j,k) += dG[i];
                 i++;
             }
         }
@@ -357,7 +360,7 @@ void backPropagation()
 
     std::cout << "\n ## BACKPROPAGATION ## \n";
     int batchSize = std::min(training_set_size, 10);
-    int nbTrainings = 100;
+    int nbTrainings = 500;
 
     for(int iTrain = 0; iTrain < nbTrainings; iTrain++)
     {
@@ -370,7 +373,6 @@ void backPropagation()
         std::fill(gradient.begin(), gradient.end(), 0);
         
         for(int picture_id: randomInts)
-
         {
             vector<vector<double>> zValues = computePerceptron(picture_id);
             vector<int> desiredOutput =  getDesiredOutput(picture_id);
@@ -379,8 +381,8 @@ void backPropagation()
         }
 
 
-    //    std::cout << "gradient" << gradient << "\n";
-        double alpha = pow(10, -0);
+        //std::cout << "gradient" << gradient << "\n";
+        double alpha = pow(10,3);
         //std::cout << alpha << '\n';
         vector<double> dG = -alpha * gradient;
        
@@ -390,7 +392,7 @@ void backPropagation()
     }
 }
 
-void test()
+void test() 
 {
 
     std::cout << "\n ## TESTING ## \n";
@@ -440,19 +442,19 @@ int main()
     // std::cout << (int)labels[2]; 
     backPropagation();
 
-    print(W);
-    print(B);
+    print(W, "WEIGHTS");
+    print(B, "BIASES");
     
     print(computePerceptron(0));
     print(getDesiredOutput(0));
 
-    print(computePerceptron(1));
+     print(computePerceptron(1));
     print(getDesiredOutput(1));
 
     print(computePerceptron(2));
-    print(getDesiredOutput(2));
+    print(getDesiredOutput(2)); 
 
 
 
-    test();
+    //test();
 }
