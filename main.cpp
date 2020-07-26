@@ -20,7 +20,7 @@ int NB_WEIGHTS = 0; //value set in init function
 int NB_BIASES = 0; // value set in init function
 
 const int training_set_size = 3;
-const int test_set_size = 0;
+const int test_set_size = 5000;
 const double oo = 1e8;
 
 vector<vector<uint8_t>> pictures(training_set_size + test_set_size);
@@ -353,30 +353,44 @@ void updateParams(vector<double> &dG)
         }   
     }
 }
+void test();
 
 void backPropagation()
 {
 
     std::cout << "\n ## BACKPROPAGATION ## \n";
     int batchSize = std::min(training_set_size, 10);
-    int nbTrainings = 100;
+    int nbEpochs = 100;
+    std::vector<int> pictureIds(training_set_size);
+    for(int i = 0; i < training_set_size; i++) pictureIds[i] = i;
 
-    for(int iTrain = 0; iTrain < nbTrainings; iTrain++)
+    for(int epoch = 0; epoch < nbEpochs; epoch++)
     {
-        if(iTrain % 100 == 0)
-            std::cout << "Training " << iTrain << '\n';
+        if(epoch % 10 == 0)
+            std::cout << "Epoch " << epoch << '\n';
 
-        vector<int> randomInts = getRandomInts(batchSize, 0, training_set_size);
+        //vector<int> randomInts = getRandomInts(batchSize, 0, training_set_size);
+        
 
+        std::random_shuffle(pictureIds.begin(), pictureIds.end());
         vector<double> gradient(NB_WEIGHTS + NB_BIASES);
         std::fill(gradient.begin(), gradient.end(), 0);
         
-        for(int picture_id: randomInts)
-        {
-            vector<vector<double>> zValues = computePerceptron(picture_id);
-            vector<int> desiredOutput =  getDesiredOutput(picture_id);
+        std::vector<int> batch;
+        for(int i = 0; i < training_set_size; i++)
+        {   
+            batch.push_back(pictureIds[i]);
+            if((i+1) % batchSize == 0)
+            {
+                for(int pictureId : batch)
+                {
+                    vector<vector<double>> zValues = computePerceptron(pictureId);
+                    vector<int> desiredOutput =  getDesiredOutput(pictureId);
 
-            updateGradient(gradient, zValues, desiredOutput);
+                    updateGradient(gradient, zValues, desiredOutput);
+                }
+                batch.resize(0);
+            }
         }
 
 
@@ -387,6 +401,7 @@ void backPropagation()
        
         updateParams(dG);
         
+        //test();
 
     }
 }
@@ -396,7 +411,7 @@ void test()
 
     std::cout << "\n ## TESTING ## \n";
     double percentage = 0.0;
-    int nbCorrect = 100;
+    int nbCorrect = 0;
 
     for(int picture_id = 0; picture_id < test_set_size; picture_id++)
     {
@@ -417,8 +432,8 @@ void test()
             nbCorrect++;
  
     }
-    percentage = (double) nbCorrect / test_set_size;
-    std::cout << nbCorrect << '\n' << percentage << '\n';
+    percentage = (double) nbCorrect / test_set_size * 100.0;
+    std::cout << "Correct " << nbCorrect << '\n' << "Percentage " << percentage << '\n';
 }
 
 int main()
@@ -454,5 +469,5 @@ int main()
     print(getDesiredOutput(2)); 
 
 
-    //test();
+    test();
 }
