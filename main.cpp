@@ -14,12 +14,12 @@ const int NB_LAYERS = 3; //Number of layers of nodes, including the input and ou
 
 const int picture_size = 28 * 28;
 const int NB_NODES_PER_LAYER[NB_LAYERS] = 
-{picture_size, 16, 10};
+{picture_size, 10, 10};
 
 int NB_WEIGHTS = 0; //value set in init function
 int NB_BIASES = 0; // value set in init function
 
-const int training_set_size = 3;
+const int training_set_size = 1;
 const int test_set_size = 0;
 const double oo = 1e8;
 
@@ -351,7 +351,7 @@ void updateParams(vector<double> &dG)
         {
             B[layer][j] += dG[i];
             i++;
-        }
+        }   
     }
 }
 
@@ -360,7 +360,7 @@ void backPropagation()
 
     std::cout << "\n ## BACKPROPAGATION ## \n";
     int batchSize = std::min(training_set_size, 10);
-    int nbTrainings = 500;
+    int nbTrainings = 200;
 
     for(int iTrain = 0; iTrain < nbTrainings; iTrain++)
     {
@@ -448,11 +448,11 @@ int main()
     print(computePerceptron(0));
     print(getDesiredOutput(0));
 
-     print(computePerceptron(1));
-    print(getDesiredOutput(1));
+    //print(computePerceptron(1));
+    //print(getDesiredOutput(1));
 
-    print(computePerceptron(2));
-    print(getDesiredOutput(2)); 
+    //print(computePerceptron(2));
+    //print(getDesiredOutput(2)); 
 
 
 
