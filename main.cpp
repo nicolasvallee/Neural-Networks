@@ -14,13 +14,13 @@ const int NB_LAYERS = 3; //Number of layers of nodes, including the input and ou
 
 const int picture_size = 28 * 28;
 const int NB_NODES_PER_LAYER[NB_LAYERS] = 
-{picture_size, 10, 10};
+{picture_size, 16, 10};
 
 int NB_WEIGHTS = 0; //value set in init function
 int NB_BIASES = 0; // value set in init function
 
-const int training_set_size = 3;
-const int test_set_size = 5000;
+const int training_set_size = 30;
+const int test_set_size = 1000;
 const double oo = 1e8;
 
 vector<vector<uint8_t>> pictures(training_set_size + test_set_size);
@@ -382,24 +382,27 @@ void backPropagation()
             batch.push_back(pictureIds[i]);
             if((i+1) % batchSize == 0)
             {
-                for(int pictureId : batch)
+                for(int pictureId : batch)  
                 {
+                    //forward pass
                     vector<vector<double>> zValues = computePerceptron(pictureId);
                     vector<int> desiredOutput =  getDesiredOutput(pictureId);
 
+                    //backward pass
                     updateGradient(gradient, zValues, desiredOutput);
                 }
                 batch.resize(0);
             }
+            //std::cout << "gradient" << gradient << "\n";
+            double alpha = pow(10,-1);
+            //std::cout << alpha << '\n';
+            vector<double> dG = -alpha * gradient;
+       
+            updateParams(dG);
         }
 
 
-        //std::cout << "gradient" << gradient << "\n";
-        double alpha = pow(10,0);
-        //std::cout << alpha << '\n';
-        vector<double> dG = -alpha * gradient;
-       
-        updateParams(dG);
+        
         
         //test();
 
