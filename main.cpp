@@ -189,8 +189,6 @@ void backPropagation()
 {
 
     std::cout << "\n ## BACKPROPAGATION ## \n";
-    int batchSize = std::min(training_set_size, 100);
-    int nbEpochs = 100;
     std::vector<int> pictureIds(training_set_size);
     for(int i = 0; i < training_set_size; i++) pictureIds[i] = i;
 
@@ -203,15 +201,18 @@ void backPropagation()
         
 
         std::random_shuffle(pictureIds.begin(), pictureIds.end());
-        vector<double> gradient(NB_WEIGHTS + NB_BIASES);
-        std::fill(gradient.begin(), gradient.end(), 0);
         
         std::vector<int> batch;
         for(int i = 0; i < training_set_size; i++)
         {   
+
             batch.push_back(pictureIds[i]);
+
             if((i+1) % batchSize == 0)
             {
+                vector<double> gradient(NB_WEIGHTS + NB_BIASES);
+                std::fill(gradient.begin(), gradient.end(), 0);
+
                 for(int pictureId : batch)  
                 {
                     //forward pass
@@ -222,13 +223,13 @@ void backPropagation()
                     updateGradient(gradient, zValues, desiredOutput);
                 }
                 batch.resize(0);
-            }
-            //std::cout << "gradient" << gradient << "\n";
-            double alpha = pow(10,-1);
-            //std::cout << alpha << '\n';
-            vector<double> dG = -alpha * gradient;
+
+                //std::cout << "gradient" << gradient << "\n";
+                //std::cout << alpha << '\n';
+                vector<double> dG = -alpha * gradient;
        
-            updateParams(dG);
+                updateParams(dG);
+           }
         }
 
        // test();
