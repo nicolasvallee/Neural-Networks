@@ -19,7 +19,7 @@ const int NB_NODES_PER_LAYER[NB_LAYERS] =
 int NB_WEIGHTS = 0; //value set in init function
 int NB_BIASES = 0; // value set in init function
 
-const int training_set_size = 30;
+const int training_set_size = 50;
 const int test_set_size = 1000;
 const double oo = 1e8;
 
@@ -359,7 +359,7 @@ void backPropagation()
 {
 
     std::cout << "\n ## BACKPROPAGATION ## \n";
-    int batchSize = std::min(training_set_size, 10);
+    int batchSize = std::min(training_set_size, 100);
     int nbEpochs = 100;
     std::vector<int> pictureIds(training_set_size);
     for(int i = 0; i < training_set_size; i++) pictureIds[i] = i;
@@ -401,9 +401,6 @@ void backPropagation()
             updateParams(dG);
         }
 
-
-        
-        
         //test();
 
     }
@@ -430,7 +427,7 @@ void test()
                 myValue = i;
             }
         }
-        vector<int> trueOutput = getDesiredOutput(picture_id);
+        vector<int> trueOutput = getDesiredOutput(picture_id + training_set_size);
         if(trueOutput[myValue] == 1)
             nbCorrect++;
  
@@ -459,8 +456,8 @@ int main()
     // std::cout << (int)labels[2]; 
     backPropagation();
 
-    print(W, "WEIGHTS");
-    print(B, "BIASES");
+    //print(W, "WEIGHTS");
+  //  print(B, "BIASES");
     
     print(computePerceptron(0));
     print(getDesiredOutput(0));
