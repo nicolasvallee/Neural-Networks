@@ -1,5 +1,5 @@
 CXX=g++
-CPPFLAGS=-Wall -std=c++11 -g -O0
+CPPFLAGS=-Wall -std=c++11 -g -O3
 
 LDFLAGS=-g
 LDLIBS=#-lsfml-graphics -lsfml-window -lsfml-system

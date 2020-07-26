@@ -10,10 +10,10 @@ const int picture_size = 28 * 28;
 const int NB_NODES_PER_LAYER[NB_LAYERS] = 
 {picture_size, 15, 10};
 
-const int training_set_size = 100;
-const int test_set_size = 1000;
+const int training_set_size = 60000;
+const int test_set_size = 5000;
 
-const int nbEpochs = 100;
+const int nbEpochs = 30;
 const int batchSize = std::min(training_set_size, 10);
 
 

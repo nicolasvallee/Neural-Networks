@@ -194,7 +194,7 @@ void backPropagation()
 
     for(int epoch = 0; epoch < nbEpochs; epoch++)
     {
-        if(epoch % 10 == 0)
+       // if(epoch % 10 == 0)
             std::cout << "Epoch " << epoch << '\n';
 
         //vector<int> randomInts = getRandomInts(batchSize, 0, training_set_size);
@@ -232,7 +232,7 @@ void backPropagation()
            }
         }
 
-       // test();
+       test();
 
     }
 }
