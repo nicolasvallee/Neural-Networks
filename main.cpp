@@ -19,7 +19,7 @@ const int NB_NODES_PER_LAYER[NB_LAYERS] =
 int NB_WEIGHTS = 0; //value set in init function
 int NB_BIASES = 0; // value set in init function
 
-const int training_set_size = 1;
+const int training_set_size = 3;
 const int test_set_size = 0;
 const double oo = 1e8;
 
@@ -125,6 +125,7 @@ vector<matrix<double>> W; //list of matrices of weights for each layer
 vector<vector<double>> B; //list of biases for each layer
 
 
+const double steepness = 1.0;
 
 double sigmoid(double x)
 {
@@ -190,16 +191,14 @@ void init()
 
             for(int k = 0; k < l1; k++)
             {
-                W[layer](j,k) = rand() % 3 - 1;
+                W[layer](j,k) = (double)(rand() % 3 - 1) / 10;
                 //W[layer](j,k) = 0;
             }
-            B[layer][j] = rand() % 3 - 1;
+            B[layer][j] = (double)(rand() % 3 - 1) / 10;
             //B[layer+1][j] = 0;
         }
     }
 
-    print(B);
-    print(W);
 }
 
 vector<int> getRandomInts(int n, int a, int b)
@@ -292,7 +291,7 @@ vector<vector<double>> computePerceptron(int picture_id)
     zValues[0].resize(NB_NODES_PER_LAYER[0]);
 
     for(int i = 0; i < picture_size; i++)
-        zValues[0][i] = (double)pictures[picture_id][i] / 255 - 0.5;
+        zValues[0][i] = (double)(pictures[picture_id][i] - 122) / 20;
     
     
 
@@ -304,7 +303,7 @@ vector<vector<double>> computePerceptron(int picture_id)
         {
             double z = 0;
             for(int k = 0; k < NB_NODES_PER_LAYER[layer-1]; k++)
-            {
+            {   
                 double activation = sigmoid(zValues[layer-1][k]);
                 z +=  activation * W[layer](j,k);
             }
@@ -360,7 +359,7 @@ void backPropagation()
 
     std::cout << "\n ## BACKPROPAGATION ## \n";
     int batchSize = std::min(training_set_size, 10);
-    int nbTrainings = 200;
+    int nbTrainings = 100;
 
     for(int iTrain = 0; iTrain < nbTrainings; iTrain++)
     {
@@ -382,7 +381,7 @@ void backPropagation()
 
 
         //std::cout << "gradient" << gradient << "\n";
-        double alpha = pow(10,3);
+        double alpha = pow(10,0);
         //std::cout << alpha << '\n';
         vector<double> dG = -alpha * gradient;
        
@@ -397,7 +396,7 @@ void test()
 
     std::cout << "\n ## TESTING ## \n";
     double percentage = 0.0;
-    int nbCorrect = 0;
+    int nbCorrect = 100;
 
     for(int picture_id = 0; picture_id < test_set_size; picture_id++)
     {
@@ -416,7 +415,7 @@ void test()
         vector<int> trueOutput = getDesiredOutput(picture_id);
         if(trueOutput[myValue] == 1)
             nbCorrect++;
-
+ 
     }
     percentage = (double) nbCorrect / test_set_size;
     std::cout << nbCorrect << '\n' << percentage << '\n';
@@ -431,7 +430,7 @@ int main()
 
     ReadMNIST();
 
-
+    
     /* for(int i = 0; i < 28; i++)
     {
         for(int j = 0; j< 28; j++)
@@ -448,12 +447,11 @@ int main()
     print(computePerceptron(0));
     print(getDesiredOutput(0));
 
-    //print(computePerceptron(1));
-    //print(getDesiredOutput(1));
+    print(computePerceptron(1));
+    print(getDesiredOutput(1));
 
-    //print(computePerceptron(2));
-    //print(getDesiredOutput(2)); 
-
+    print(computePerceptron(2));
+    print(getDesiredOutput(2)); 
 
 
     //test();
