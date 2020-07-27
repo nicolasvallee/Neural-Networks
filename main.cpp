@@ -59,7 +59,6 @@ void init()
 
 }
 
-//boudi 
 
 void updateGradient(vector<double>& gradient, const vector<vector<double>>& zValues, const vector<int>& desiredOutput)
 {
@@ -124,25 +123,16 @@ vector<vector<double>> feedForward(int picture_id)
     for(int i = 0; i < picture_size; i++)
         zValues[0][i] = (double)(pictures[picture_id][i] - 122) / 20;
     
-    
 
     for(int layer = 1; layer < NB_LAYERS; layer++)
     {
         zValues[layer].resize(NB_NODES_PER_LAYER[layer]);
 
-        for(int j = 0; j < NB_NODES_PER_LAYER[layer]; j++)
-        {
-            double z = 0;
-            for(int k = 0; k < NB_NODES_PER_LAYER[layer-1]; k++)
-            {   
-                double activation = sigmoid(zValues[layer-1][k]);
-                z +=  activation * W[layer](j,k);
-            }
-                
-
-            z += B[layer][j];
-            zValues[layer][j] = z; 
-        }
+        vector<double> a = zValues[layer-1];
+        apply(sigmoid, a);
+        
+        zValues[layer] = prod(W[layer], a) + B[layer];
+        
     }
 
     return zValues;
