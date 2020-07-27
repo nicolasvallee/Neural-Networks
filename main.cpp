@@ -13,8 +13,8 @@
 using namespace boost::numeric::ublas;
 
 
-int NB_WEIGHTS = 0; //value set in init function
-int NB_BIASES = 0; // value set in init function
+int NB_WEIGHTS = 0; //initialised in init()
+int NB_BIASES = 0; //initialised in init()
 
 
 vector<matrix<double>> W(NB_LAYERS); //list of matrices of weights for each layer
@@ -22,21 +22,17 @@ vector<vector<double>> B(NB_LAYERS); //list of biases for each layer
 //W and B are used from *1* to NB_LAYERS-1 included
 
 vector<matrix<double>> zeroWeights(NB_LAYERS); //initialised in init()
-vector<vector<double>> zeroBiases(NB_LAYERS); // initialised in init()
+vector<vector<double>> zeroBiases(NB_LAYERS); //initialised in init()
 
 void init()
 {   
-
-
     std::cout << "\n ## INITIALIZING ## \n";
-
 
     for(int layer = 0; layer < NB_LAYERS-1; layer++)
     {
         NB_WEIGHTS += NB_NODES_PER_LAYER[layer] * NB_NODES_PER_LAYER[layer+1];
         NB_BIASES += NB_NODES_PER_LAYER[layer+1];
     }
-
 
     for(int layer = 1; layer < NB_LAYERS; layer++)
     {
@@ -58,7 +54,6 @@ void init()
             zeroBiases[layer][j] = 0;
         }
     }
-
 }
 
 
@@ -87,20 +82,15 @@ const vector<vector<double>>& zValues, const vector<int>& desiredOutput)
 
         //weights 
         for(int j = 0; j < NB_NODES_PER_LAYER[layer+1]; j++)
-        {
             for(int k = 0; k < NB_NODES_PER_LAYER[layer]; k++)
-            {
                 nablaC_W[layer+1](j,k) = activations[k] * delta[j];
-                
-            }
-        }
+
         //biases
         nablaC_B[layer+1] = delta;
 
         vector<double> z_l = zValues[layer];
         apply(sigmoidPrime, z_l);
         delta = element_prod(prod(trans(W[layer+1]), delta), z_l);
-
     }
 
     gradientW += nablaC_W;
@@ -117,7 +107,6 @@ vector<vector<double>> feedForward(int picture_id)
     for(int i = 0; i < picture_size; i++)
         zValues[0][i] = (double)(pictures[picture_id][i] - 122) / 20;
     
-
     for(int layer = 1; layer < NB_LAYERS; layer++)
     {
         zValues[layer].resize(NB_NODES_PER_LAYER[layer]);
@@ -159,25 +148,21 @@ void test();
 
 void backPropagation()
 {
-
     std::cout << "\n ## BACKPROPAGATION ## \n";
     std::vector<int> pictureIds(training_set_size);
-    for(int i = 0; i < training_set_size; i++) pictureIds[i] = i;
+    for(int i = 0; i < training_set_size; i++) 
+        pictureIds[i] = i;
 
     for(int epoch = 0; epoch < nbEpochs; epoch++)
     {
        // if(epoch % 10 == 0)
             std::cout << "Epoch " << epoch << '\n';
-
-        //vector<int> randomInts = getRandomInts(batchSize, 0, training_set_size);
         
-
         std::random_shuffle(pictureIds.begin(), pictureIds.end());
         
         std::vector<int> batch;
         for(int i = 0; i < training_set_size; i++)
         {   
-
             batch.push_back(pictureIds[i]);
 
             if((i+1) % batchSize == 0)
@@ -202,13 +187,11 @@ void backPropagation()
 
         if(epoch % 10 == 0)
             test();
-
     }
 }
 
 void test() 
 {
-
     std::cout << "\n ## TESTING ## \n";
     double percentage = 0.0;
     int nbCorrect = 0;
@@ -220,18 +203,17 @@ void test()
         int myValue = 0;
         double max = -oo;
         for(int i = 0; i < (int)output.size(); i++)
-        {
             if(output[i] > max)
             {
                 max = output[i];
                 myValue = i;
             }
-        }
+
         vector<int> trueOutput = getDesiredOutput(picture_id + training_set_size);
         if(trueOutput[myValue] == 1)
             nbCorrect++;
- 
     }
+
     percentage = (double) nbCorrect / test_set_size * 100.0;
     std::cout << "Correct " << nbCorrect << '\n' << "Percentage " << percentage << '\n';
 }
@@ -240,24 +222,14 @@ int main()
 {
     srand(time(0));
 
-
     init();
 
     ReadMNIST();
 
-    
-    /* for(int i = 0; i < 28; i++)
-    {
-        for(int j = 0; j< 28; j++)
-            std::cout << (int)pictures[2][i*28 + j];
-        std::cout << '\n';
-    } */
-
-    // std::cout << (int)labels[2]; 
     backPropagation();
 
     //print(W, "WEIGHTS");
-  //  print(B, "BIASES");
+    //print(B, "BIASES");
     
     print(feedForward(0));
     print(getDesiredOutput(0));
@@ -267,7 +239,6 @@ int main()
 
     print(feedForward(2));
     print(getDesiredOutput(2)); 
-
 
     test();
 }
