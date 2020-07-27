@@ -17,10 +17,12 @@ int NB_WEIGHTS = 0; //value set in init function
 int NB_BIASES = 0; // value set in init function
 
 
-vector<matrix<double>> W; //list of matrices of weights for each layer
-vector<vector<double>> B; //list of biases for each layer
+vector<matrix<double>> W(NB_LAYERS); //list of matrices of weights for each layer
+vector<vector<double>> B(NB_LAYERS); //list of biases for each layer
+//W and B are used from *1* to NB_LAYERS-1 included
 
-
+vector<matrix<double>> zeroWeights(NB_LAYERS); //initialised in init()
+vector<vector<double>> zeroBiases(NB_LAYERS); // initialised in init()
 
 void init()
 {   
@@ -35,51 +37,44 @@ void init()
         NB_BIASES += NB_NODES_PER_LAYER[layer+1];
     }
 
-    W.resize(NB_LAYERS); //W and B are used from *1* to NB_LAYERS-1 included
-    B.resize(NB_LAYERS);  
 
     for(int layer = 1; layer < NB_LAYERS; layer++)
     {
         int l1 = NB_NODES_PER_LAYER[layer-1];
         int l2 = NB_NODES_PER_LAYER[layer];
-        W[layer].resize(l2,l1); // is it not(l1,l2) ?????????
+        W[layer].resize(l2,l1);
         B[layer].resize(l2);
-         for(int j = 0; j < l2; j++)
-        {
+        zeroWeights[layer].resize(l2,l1);
+        zeroBiases[layer].resize(l2);
 
+        for(int j = 0; j < l2; j++)
+        {
             for(int k = 0; k < l1; k++)
             {
                 W[layer](j,k) = (double)(rand() % 3 - 1) / 10;
-                //W[layer](j,k) = 0;
+                zeroWeights[layer](j,k) = 0;
             }
             B[layer][j] = (double)(rand() % 3 - 1) / 10;
-            //B[layer+1][j] = 0;
+            zeroBiases[layer][j] = 0;
         }
     }
 
 }
 
 
-void updateGradient(vector<double>& gradient, const vector<vector<double>>& zValues, const vector<int>& desiredOutput)
+void updateGradient(vector<matrix<double>>& gradientW, vector<vector<double>>& gradientB,
+const vector<vector<double>>& zValues, const vector<int>& desiredOutput)
 {
-    vector<double> nablaC(NB_WEIGHTS + NB_BIASES);
-    //Ordered by decreasing number of layer:
-    // weights first :
-    //then by increasing nodes on the right (j)
-    //then by increasing nodes on the left (k)
-    //then biases
+    vector<matrix<double>> nablaC_W = zeroWeights;
+    vector<vector<double>> nablaC_B = zeroBiases;
 
     vector<double> lastLayerZ = zValues[NB_LAYERS-1];
 
-  //  std::cout << "lastLayerZ" << lastLayerZ<< "\n"; 
-    vector<double> lastLayerActivation = lastLayerZ; // THIS WILL CONSTRUCT A NEW OBJECT RIGHT ??
+    vector<double> lastLayerActivation = lastLayerZ;
     apply(sigmoid, lastLayerActivation);
 
-   // std::cout << "lastLayerA" << lastLayerActivation << "\n"; 
     vector<double> nabla_a_C = 2.0 * (lastLayerActivation - desiredOutput);
 
-   // std::cout << "nabla_a_C" << nabla_a_C << "\n"; 
-    int i_nablaC = 0;
     vector<double> fPrime = lastLayerZ;
     apply(sigmoidPrime, fPrime);         // This will quickly saturate to 0 if values are large (amplitude)
     
@@ -95,16 +90,16 @@ void updateGradient(vector<double>& gradient, const vector<vector<double>>& zVal
         {
             for(int k = 0; k < NB_NODES_PER_LAYER[layer]; k++)
             {
-                nablaC[i_nablaC] = activations[k] * delta[j];
-                i_nablaC++;
+                nablaC_W[layer+1](j,k) = activations[k] * delta[j];
+                
             }
         }
         //biases
         for(int j = 0; j < NB_NODES_PER_LAYER[layer+1]; j++)
         {
-            nablaC[i_nablaC] = delta[j];
-            i_nablaC++;
+            nablaC_B[layer+1][j] = delta[j];
         }
+
         vector<double> v1 = prod(trans(W[layer+1]), delta);
         vector<double> v2 = zValues[layer];
         apply(sigmoidPrime, v2);
@@ -112,7 +107,8 @@ void updateGradient(vector<double>& gradient, const vector<vector<double>>& zVal
 
     }
 
-    gradient += nablaC;
+    gradientW += nablaC_W;
+    gradientB += nablaC_B;
 }
 
 vector<vector<double>> feedForward(int picture_id)
@@ -152,28 +148,15 @@ vector<int> getDesiredOutput(int picture_id)
     return v;
 }
 
-void updateParams(vector<double> &dG)
+void updateParams(vector<matrix<double>> &gradientW, vector<vector<double>> &gradientB)
 {
-
-    int i = 0;
-    for(int layer = NB_LAYERS-1; layer >= 1; layer--)
-
+    for(int layer = 0; layer < NB_LAYERS; layer++)
     {
-        for(int j = 0; j < NB_NODES_PER_LAYER[layer]; j++)
-        {
-            for(int k = 0; k < NB_NODES_PER_LAYER[layer-1]; k++)
-            {
-                W[layer](j,k) += dG[i];
-                i++;
-            }
-        }
-        for(int j = 0; j < NB_NODES_PER_LAYER[layer]; j++)
-        {
-            B[layer][j] += dG[i];
-            i++;
-        }   
-    }
+        W[layer] += -alpha * gradientW[layer];
+        B[layer] += -alpha * gradientB[layer];  
+    }      
 }
+
 void test();
 
 void backPropagation()
@@ -201,8 +184,8 @@ void backPropagation()
 
             if((i+1) % batchSize == 0)
             {
-                vector<double> gradient(NB_WEIGHTS + NB_BIASES);
-                std::fill(gradient.begin(), gradient.end(), 0);
+                vector<matrix<double>> gradientW = zeroWeights;
+                vector<vector<double>> gradientB = zeroBiases;
 
                 for(int pictureId : batch)  
                 {
@@ -211,15 +194,11 @@ void backPropagation()
                     vector<int> desiredOutput =  getDesiredOutput(pictureId);
 
                     //backward pass
-                    updateGradient(gradient, zValues, desiredOutput);
+                    updateGradient(gradientW, gradientB, zValues, desiredOutput);
                 }
                 batch.resize(0);
 
-                //std::cout << "gradient" << gradient << "\n";
-                //std::cout << alpha << '\n';
-                vector<double> dG = -alpha * gradient;
-       
-                updateParams(dG);
+                updateParams(gradientW, gradientB);
            }
         }
 
