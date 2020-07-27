@@ -95,10 +95,7 @@ const vector<vector<double>>& zValues, const vector<int>& desiredOutput)
             }
         }
         //biases
-        for(int j = 0; j < NB_NODES_PER_LAYER[layer+1]; j++)
-        {
-            nablaC_B[layer+1][j] = delta[j];
-        }
+        nablaC_B[layer+1] = delta;
 
         vector<double> z_l = zValues[layer];
         apply(sigmoidPrime, z_l);
@@ -115,6 +112,8 @@ vector<vector<double>> feedForward(int picture_id)
     vector<vector<double>> zValues(NB_LAYERS);
     zValues[0].resize(NB_NODES_PER_LAYER[0]);
 
+    //Scaling input by a 1/20 factor and centering around 0
+    //For saturation purposes
     for(int i = 0; i < picture_size; i++)
         zValues[0][i] = (double)(pictures[picture_id][i] - 122) / 20;
     
