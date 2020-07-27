@@ -59,6 +59,7 @@ void init()
 
 }
 
+//boudi 
 
 void updateGradient(vector<double>& gradient, const vector<vector<double>>& zValues, const vector<int>& desiredOutput)
 {
@@ -115,7 +116,7 @@ void updateGradient(vector<double>& gradient, const vector<vector<double>>& zVal
     gradient += nablaC;
 }
 
-vector<vector<double>> computePerceptron(int picture_id)
+vector<vector<double>> feedForward(int picture_id)
 {
     vector<vector<double>> zValues(NB_LAYERS);
     zValues[0].resize(NB_NODES_PER_LAYER[0]);
@@ -216,7 +217,7 @@ void backPropagation()
                 for(int pictureId : batch)  
                 {
                     //forward pass
-                    vector<vector<double>> zValues = computePerceptron(pictureId);
+                    vector<vector<double>> zValues = feedForward(pictureId);
                     vector<int> desiredOutput =  getDesiredOutput(pictureId);
 
                     //backward pass
@@ -232,7 +233,8 @@ void backPropagation()
            }
         }
 
-       test();
+        if(epoch % 10 == 0)
+            test();
 
     }
 }
@@ -246,7 +248,7 @@ void test()
 
     for(int picture_id = 0; picture_id < test_set_size; picture_id++)
     {
-        vector<vector<double>> zValues = computePerceptron(picture_id + training_set_size);
+        vector<vector<double>> zValues = feedForward(picture_id + training_set_size);
         vector<double> output = zValues[zValues.size()-1];
         int myValue = 0;
         double max = -oo;
@@ -290,13 +292,13 @@ int main()
     //print(W, "WEIGHTS");
   //  print(B, "BIASES");
     
-    print(computePerceptron(0));
+    print(feedForward(0));
     print(getDesiredOutput(0));
 
-    print(computePerceptron(1));
+    print(feedForward(1));
     print(getDesiredOutput(1));
 
-    print(computePerceptron(2));
+    print(feedForward(2));
     print(getDesiredOutput(2)); 
 
 
