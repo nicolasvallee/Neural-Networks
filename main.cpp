@@ -100,10 +100,9 @@ const vector<vector<double>>& zValues, const vector<int>& desiredOutput)
             nablaC_B[layer+1][j] = delta[j];
         }
 
-        vector<double> v1 = prod(trans(W[layer+1]), delta);
-        vector<double> v2 = zValues[layer];
-        apply(sigmoidPrime, v2);
-        delta = element_prod(v1, v2);
+        vector<double> z_l = zValues[layer];
+        apply(sigmoidPrime, z_l);
+        delta = element_prod(prod(trans(W[layer+1]), delta), z_l);
 
     }
 
