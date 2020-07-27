@@ -1,8 +1,14 @@
 # Neural-Networks
+
+## Installation 
 Type 
-git clone <this repo>
-make
-./neural-app
+
+
+`git clone <this repo>`
+
+`make`
+
+`./neural-app`
 
 Enjoy !
 
